@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <script>/* 低于或等于ie9显示 */
+  (function () {
+    var UA = navigator.userAgent;
+    var isIE = UA.indexOf('MSIE') > -1;
+    var lessThenIE8 = isIE ? /\d+/.exec(UA.split(';')[1]) : 'no ie';
+    if (lessThenIE8 <= 9) {
+      alert('您的浏览器版本过低\n建议您下载谷歌浏览器');
+      window.location.href = 'https://www.google.cn/chrome'
+    }
+  })()</script>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>进销存</title>
+  <link href="//cdn.hbhrlb.com/images/hr-logo-icon.ico" rel="shortcut icon" type=image/x-icon>
+</head>
+<body>
+<noscript>You need to enable JavaScript to run this app.</noscript>
+<div id="root"></div>
+<!--
+  This HTML file is a template.
+  If you open it directly in the browser, you will see an empty page.
+
+  You can add webfonts, meta tags, or analytics to this file.
+  The build step will place the bundled scripts into the <body> tag.
+
+  To begin the development, run `npm start` or `yarn start`.
+  To create a production bundle, use `npm run build` or `yarn build`.
+-->
+<script>
+  window.globalConfig = {
+    onSelfList: [
+      { value: 2, label: '全部'},
+      { value: 1, label: '上架'},
+      { value: 0, label: '下架'}
+    ],
+    approvalStatus: [
+      { value: '', label: '全部'},
+      { value: 1, label: '反审批通过'},
+      { value: 2, label: '一级审批驳回'},
+      { value: 3, label: '已提交一级待审批'},
+      { value: 4, label: '审批通过'},
+      { value: 5, label: '二级审批驳回'},
+      { value: 6, label: '二级待审批'},
+      { value: 7, label: '废弃'},
+    ],
+    saveWayList: [
+      { value: 2, label: '全部'},
+      { value: 1, label: '货架'},
+      { value: 0, label: '卡板'},
+    ],
+    approvalDocList: [
+      { value: 1, label: '审核入库单'},
+      { value: 0, label: '审核出库单'},
+      { value: 2, label: '审核调拨单'},
+    ],
+    isChooseOptions: [
+      { value: 1, label: '是'},
+      { value: 0, label: '否'},
+    ],
+    storeType: [
+      { value: 0, label: '货架'},
+      { value: 1, label: '卡板'},
+    ],
+    approvalStatusSmall: [
+      { value: 3, label: '驳回'},
+      { value: 2, label: '通过'}
+    ],
+    approvalStatusList: [
+      { value: 1, label: '审批中'},
+      { value: 0, label: '待提交'},
+      { value: 3, label: '驳回'},
+      { value: 2, label: '通过'}
+    ],
+    approvalLevelList: [
+      { value: 1, label: '一级审批'},
+      { value: 2, label: '二级审批'},
+      { value: 3, label: '三级审批'},
+    ],
+    approvalSetList: [
+      { value: 1, label: '需要审批'},
+      { value: 0, label: '无需审批'},
+    ],
+    isCanUse: [
+      { value: 0, label: '禁用'},
+      { value: 1, label: '启用'}
+    ],
+    storeStatusList: [
+      { value: 2, label: '高于库存上限值'},
+      { value: 1, label: '低于库存下限值'},
+      { value: 0, label: '库存<=0商品'},
+    ],
+    orderStatusList: [
+      { value: 1, label: '正在交易'},
+      { value: 2, label: '交易完成'},
+      { value: 3, label: '退货处理中'},
+      { value: 4, label: '全部已退货'},
+      { value: 5, label: '部分已退货'},
+    ],
+    payStatusList: [
+      { value: 1, label: '未支付'},
+      { value: 2, label: '已支付'},
+      { value: 3, label: '支付异常'},
+      { value: 4, label: '已退款'},
+      { value: 5, label: '部分已退款'},
+      { value: 6, label: '未退款'},
+    ],
+    approvalReturnList: [
+      { value: 0, label: '废止'},
+      { value: 1, label: '审批通过'},
+    ],
+    customerApprovalReturnList: [
+      { value: 0, label: '驳回'},
+      { value: 1, label: '审批通过'},
+    ],
+    onlyPassStatusList: [
+    { value: 1, label: '审批通过'},
+    ],
+    returnResult: [
+      { value: 1, label: '退回门店仓,继续销售'},
+      { value: 2, label: '退回公司'}
+    ],
+    returnMethod: [
+      { value: 1, label: '现金'},
+      // { value: 3, label: '支付宝'},
+      // { value: 2, label: '微信'},
+    ],
+    returnMoneyStatus: [
+      { value: 0, label: '未退款'},
+      { value: 1, label: '已退款'},
+    ],
+    returnOrderStatus: [
+      { value: 0, label: '废止'},
+      { value: 1, label: '片区经理审批'},
+      { value: 2, label: '客服部审批'},
+      { value: 3, label: '待邮寄'},
+      { value: 4, label: '客服部验收'},
+      { value: 5, label: '物流部审批'},
+      { value: 6, label: '财务部退款'},
+      { value: 7, label: '退货已完成'},
+    ],
+    payWayList: [
+      { value: 1, label: '现金'},
+      { value: 3, label: '支付宝'},
+      { value: 2, label: '微信'},
+    ],
+    returnTypeList: [
+      { label: '门店自返', value: 1},
+      { label: '退回公司', value: 2},
+    ]
+
+  }
+</script>
+
+<script src="//cdn.hbhrlb.com/web/tool/polyfill/6.23.0/polyfill.min.js"></script>
+<script src="//cdn.hbhrlb.com/web/tool/react/16.6.1/react.production.min.js"></script>
+<script src="//cdn.hbhrlb.com/web/tool/react-dom/16.6.1/react-dom.production.min.js"></script>
+<script src="//cdn.hbhrlb.com/web/tool/react-router-dom/4.3.1/react-router-dom.min.js"></script>
+<script src="https://cdn.hbhrlb.com/web/tool/provinceCityArea/1.0/provinceAreaCity.js"></script>
+</body>
+</html>

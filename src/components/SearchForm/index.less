@@ -1,0 +1,36 @@
+.z-search-form{
+  border: 1px solid #e8e8e8;
+  padding: 20px;
+  border-radius: 6px;
+  .ant-form-item{
+    display: flex;
+    margin-bottom: 4px;
+  }
+  .ant-form-item-label{
+    width: 100px;
+    cursor: pointer;
+    text-align: center;
+    label{
+      width: 100px;
+      display: block;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+  .ant-form-item-control-wrapper{
+    flex: 1;
+  }
+}
+
+.z-search-btn-wrapper{
+  width: 100%;
+  button:not(:last-child){
+    margin-right: 16px;
+  }
+  &-right:hover{
+    cursor: pointer;
+    color: #f49c79;
+  }
+}

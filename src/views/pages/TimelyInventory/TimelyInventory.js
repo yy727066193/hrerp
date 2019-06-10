@@ -1,0 +1,308 @@
+import React from 'react';
+import './../../../assets/style/common/index.less';
+import '../../../assets/style/common/pageItem.less';
+import './index.less';
+import { Bread, SearchForm}  from './../../../components/index';
+import {setAction, getLoginInfo} from "../../../utils/public";
+import { Table, Divider, Modal, Button, Pagination } from 'antd';
+import Columns from './columnConfig';
+import { inject, observer } from 'mobx-react';
+import UpdateModal from './commonUpdateModal';
+import GoodsCenterService from "../../../service/GoodsCenterService";
+import BaseCenterService from '../../../service/BaseCenterService';
+import {SUCCESS_CODE} from "../../../conf";
+import helper from "../../../utils/helper";
+
+const breadCrumbList = ['公司即时库存'];
+const PATH = 'timelyInventory';
+const searchData = [
+  {title: '分公司', dataIndex: 'compony', formType: 'select', options: [], bindChange: true},
+  {title: '所属仓库', dataIndex: 'store', formType: 'select', options: []},
+  {title: '货品名称', dataIndex: 'goods', formType: 'input',},
+  {title: '货品编码', dataIndex: 'goodsCode', formType: 'input',},
+]
+
+@inject('store')
+@observer
+class TimelyInventory extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      visible: false,
+      item: {},
+      tableDataList: [],
+      tableRowData: {},
+      storeList: [],
+      allComponyList: []
+    }
+  }
+
+  render() {
+    const { tableDataList, visible } = this.state;
+    const { pageNum, pageSize, total, tableLoading} = this.props.store;
+    const columns = () => {
+      const arr = [];
+      Columns.tableHead.forEach(item => {
+        const { dataIndex } = item;
+        if (dataIndex === 'actions') {
+          item.render = (text, record, index) => this.renderAction(text, record, index)
+        }
+
+        arr.push(item);
+      });
+
+      return arr;
+    };
+    return(
+      <div className="page-wrapper">
+        <div className="page-wrapper-bread">
+          <Bread breadList={breadCrumbList} />
+        </div>
+        <div className="page-wrapper-search">
+          <SearchForm
+              formList={searchData}
+              ref={el => this.searchForm = el}
+              showSearchCount={3}
+              showSearch={setAction(PATH, 'search')}
+              onSubmit={(data) => this.onSearchReset(true, data)}
+              onReset={() => this.onSearchReset(0, null)}
+              onSelect={(item, val) => this.onSelect(item, val)}
+              >
+              {
+                setAction(PATH, 'countingStore')?<Button type="primary" onClick={() => this.props.history.push({ pathname: '/addNewOrder', state: { showModal: true} })}>盘点库存</Button> :null
+              }
+          </SearchForm>
+        </div>
+        <div className="page-wrapper-content">
+          <Table
+            size="small"
+            dataSource={tableDataList}
+            columns={columns()}
+            rowKey={record => record.key}
+            loading={tableLoading}
+            pagination={false}
+            bordered />
+        </div>
+
+        <div className="page-wrapper-page">
+          <Pagination
+            onChange={(num) => this.pageChange(0, num)}
+            onShowSizeChange={(num, size) => this.pageChange(1, size)}
+            current={pageNum}
+            total={total}
+            pageSize={pageSize}
+            showSizeChanger
+            showTotal={(total) => `${total}条`} />
+        </div>
+        <Modal title="修改预警值"
+          visible={visible}
+          onOk={this.handleOk.bind(this)}
+          onCancel={this.handleCancel.bind(this)}>
+          <UpdateModal ref= {el => this.inputEl = el} />
+        </Modal>
+
+      </div>
+    )
+  }
+
+  componentDidMount() {
+    this.getAllCompony();
+    this.getTableList();
+  }
+
+  async getStoreList(id) {
+    const params = {
+      companyOrStore: 0 ,// 0为公司仓
+      belongCompanyId: id
+    } 
+    const { employee, subordinateStoreIds, companyIds } = getLoginInfo();
+    if (employee.roleId === 1 || employee.roleId === 2) {
+      params.storeIds = subordinateStoreIds
+    } else {
+      params.storeIds = subordinateStoreIds;
+      params.companyIds = companyIds;
+    }
+    const { data, code } = await GoodsCenterService.boundOrders.getStoreListByCompanyId(params);
+    if (code !== SUCCESS_CODE) return;
+    const arr = [];
+    data.list.forEach((item) => {
+      arr.push({
+        value: item.id,
+        label: item.depotName
+      });
+    });
+    searchData.forEach((item) => {
+      const { dataIndex } = item;
+      if (dataIndex === 'store') {
+        item.options = arr;
+      }
+    });
+    this.setState({
+      storeList: arr
+    });
+  }
+
+  async getAllCompony() {
+    const { data, code } = await BaseCenterService.Company.listAll({
+      companyIds: getLoginInfo().companyIds
+    });
+    if (code !== SUCCESS_CODE) return;
+    const arr = [];
+    data.forEach((item) => {
+      arr.push({
+        value: item.id,
+        label: item.name
+      });
+    });
+    searchData.forEach((item) => {
+      if (item.dataIndex === 'compony') {
+        item.options = arr;
+      }
+    });
+    this.setState({
+      allComponyList: arr
+    });
+  }
+
+  async getTableList() {
+    const searchData = this.searchForm.getFormData();
+    const { setCommon, pageNum, pageSize } = this.props.store;
+    const params = {
+      companyOrStore: 0,
+      depotId: searchData ? searchData.store: '',
+      componyId: searchData ? searchData.name: '',
+      goodsName: searchData ? searchData.goods: '',
+      companyOrStoreId: searchData ? searchData.compony: '',
+      goodsCode: searchData? searchData.goodsCode: '',
+      pageNum,
+      pageSize
+    }
+    const { employee, subordinateStoreIds, companyIds } = getLoginInfo();
+    if (employee.roleId === 1 || employee.roleId === 2) {
+      params.storeIds = subordinateStoreIds
+    } else {
+      params.storeIds = subordinateStoreIds;
+      params.companyIds = companyIds;
+    }
+    setCommon('tableLoading', true);
+    const { data, code } = await GoodsCenterService.componyStore.selectAll(params);
+    if (code !== SUCCESS_CODE) return;
+    let index = 0;
+    data.list.forEach((item) =>{
+      index ++;
+      item.serialNum = index;
+      item.key = index;
+      if (item.stockMax === null) {
+        item.stockMax = 0;
+      }
+      if (item.stockMin === null) {
+        item.stockMin = 0;
+      }
+    });
+    setCommon('total', data.total);
+    setCommon('tableLoading', false);
+    this.setState({
+      tableDataList: data.list
+    })
+  }
+
+  onSelect(item, val) {
+    this.getStoreList(val);
+  }
+
+  onSearchReset(bool, data) {
+    if (bool) { // 查询
+      this.getTableList();
+    } else { // 重置
+
+    }
+  }
+
+  viewDetail(item) {
+    this.props.history.push({ pathname: '/InventoryDetail', state: { id: item.goodsCode, depotId: item.depotId, fromCompany: true } });
+  }
+
+  changeLimitNum(rowData) {
+    this.setState({
+      visible: true
+    });
+    const obj = {
+      stockMax: rowData.stockMax,
+      stockMin: rowData.stockMin
+    }
+    this.setState({
+      tableRowData: rowData
+    })
+    setTimeout(() => {
+      this.inputEl.setFieldsValue(obj)
+    })
+
+  }
+
+  handleOk() { // 确定
+    this.setState({
+      visible: false
+    });
+    this.inputEl.validateFields((err, values) => {
+      if (values.stockMax !== '' && values.stockMin !== '') {
+        this.updateNum(values);
+      }
+    });
+  }
+
+  async updateNum(values) {
+    const { tableRowData } = this.state;
+    const { setCommon} = this.props.store;
+    const { id } = tableRowData;
+    const { code } = await GoodsCenterService.componyStore.updateNumber({
+      id,
+      stockMax: Number(values.stockMax),
+      stockMin: Number(values.stockMin)
+    });
+    if (code !== SUCCESS_CODE) {
+      return;
+    }
+    helper.S('修改成功');
+    setCommon('modalVisible', false);
+    this.getTableList();
+  }
+
+  handleCancel() { // 取消
+    this.setState({
+      visible: false
+    });
+  }
+
+  pageChange(bool, data) {
+    const { setCommon } = this.props.store;
+    if (bool) { // 每页数量改变
+      setCommon('pageSize', data);
+    } else { // 页数变化
+      setCommon('pageNum', data);
+    }
+    this.getTableList();
+  }
+
+  renderAction = (text, record, index) => {
+    return (
+      <span>
+        {
+          !setAction(PATH, 'viewDetail') ? null: [
+          <Button type="primary" size="small" onClick={() => this.viewDetail(record)}>明细</Button>,
+          
+          ]
+        }
+        {
+          !setAction(PATH, 'update') ? null:
+          [
+            <Divider type="vertical" />,
+            <Button type="danger" ghost size="small" setAction onClick={() => this.changeLimitNum(record)}>修改预警值</Button>
+          ]
+        }
+
+      </span>
+    )
+  }
+}
+
+export default TimelyInventory;
